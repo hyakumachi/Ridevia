@@ -11,6 +11,8 @@ async function query(sql){return exec(cli,['db','query','--linked',sql],{cwd:rep
 const id='40000000-0000-0000-0000-000000000001';
 const id2='40000000-0000-0000-0000-000000000002';
 const customer='40000000-0000-0000-0000-000000000004';
+const group='40000000-0000-0000-0000-000000000005';
+const admin='40000000-0000-0000-0000-000000000006';
 const insert=(ids=[id])=>`insert into public.bookings(group_ref,customer_id,car_id,start_date,end_date,daily_rate) select gen_random_uuid(),'${customer}',id,current_date+150,current_date+157,1 from unnest(array[${ids.map(x=>`'${x}'::uuid`).join(',')}]) id`;
 const maintenance=`update public.cars set maintenance=true where id='${id}'`;
 async function cleanBookings(){await query(`delete from public.bookings where car_id in ('${id}','${id2}');update public.cars set maintenance=false where id in ('${id}','${id2}')`);}
@@ -35,7 +37,7 @@ async function race(label,first,second,finish,expected){
 }
 let created=false;
 try{
- await query(`begin;insert into public.cars(id,name,plate_number,daily_rate) values ('${id}','Concurrency test','RACE-TEMP-A',1000),('${id2}','Concurrency test','RACE-TEMP-B',2000);insert into public.customers(id,full_name,email,phone,license_number) values ('${customer}','Concurrency Test','concurrency-test@example.com','09123456789','TEST-ONLY');commit;`);created=true;
+ await query(`begin;insert into public.cars(id,name,plate_number,daily_rate) values ('${id}','Concurrency test','RACE-TEMP-A',1000),('${id2}','Concurrency test','RACE-TEMP-B',2000);insert into public.customers(id,full_name,email,phone,license_number) values ('${customer}','Concurrency Test','concurrency-test@example.com','09123456789','TEST-ONLY');insert into auth.users(id) values ('${admin}');insert into private.admins(user_id) values ('${admin}');commit;`);created=true;
  await race('overlapping reservations serialize and reject second',insert(),insert(),'commit','23P01');
  await race('rollback releases reservation lock',insert(),insert(),'rollback',null);
  await race('maintenance blocks competing booking',maintenance,insert(),'commit','23514');
@@ -43,6 +45,12 @@ try{
  // Exercise the actual RPC with cars selected in reverse order.
  const submit=ids=>`set local role anon;select public.submit_booking(array[${ids.map(x=>`'${x}'::uuid`).join(',')}],current_date+160,current_date+167,'Concurrency Test','race-rpc@example.com','09123456789','TEST-ONLY');reset role`;
  await race('RPC reverse car order avoids deadlock',submit([id,id2]),submit([id2,id]),'commit','23P01');
+ const insertGroup = `insert into public.bookings(group_ref,customer_id,car_id,start_date,end_date,daily_rate) select '${group}','${customer}',id,current_date+180,current_date+187,1 from unnest(array['${id}'::uuid,'${id2}'::uuid]) id`;
+ const action = status => `set local request.jwt.claims='{"sub":"${admin}"}';set local role authenticated;select public.update_booking_group('${group}','${status}');reset role`;
+ await query(insertGroup);
+ await race('group cancellation blocks competing start without partial updates',action('cancelled'),action('ongoing'),'commit','23514');
+ await query(insertGroup);
+ await race('group cancellation releases cars for competing maintenance',action('cancelled'),maintenance,'commit',null);
 }finally{
- if(created) await query(`begin;delete from public.bookings where car_id in ('${id}','${id2}');delete from public.cars where id in ('${id}','${id2}');delete from public.customers where id='${customer}' or email='race-rpc@example.com';commit;`);
+ if(created) await query(`begin;delete from public.bookings where car_id in ('${id}','${id2}');delete from public.cars where id in ('${id}','${id2}');delete from public.customers where id='${customer}' or email='race-rpc@example.com';delete from auth.users where id='${admin}';commit;`);
 }
