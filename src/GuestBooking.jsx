@@ -203,6 +203,7 @@ function GuestBooking({
             <p className="eyebrow">RESERVATION RECEIVED</p>
             <h2>You’re one step closer.</h2>
             <p>Your reservation is pending. Payment has not been collected.</p>
+            <p><strong>Pay at pickup.</strong> Bring your booking reference. Ridevia staff will record your payment after receiving it.</p>
             <dl>
               <div>
                 <dt>Booking reference</dt>
@@ -408,6 +409,7 @@ function GuestBooking({
                   Final price confirmed on submission.
                 </small>
               </div>
+              <p><strong>Pay at pickup.</strong> No online payment is required to reserve your car.</p>
               <fieldset disabled={submitting}>
                 <legend className="sr-only">Guest details</legend>
                 {[
@@ -453,9 +455,9 @@ function GuestBooking({
                 {submitting ? "Submitting reservation…" : "Reserve your ride →"}
               </button>
               <p className="fine-print">
-                Your reservation starts as pending. No payment is collected
-                here. Your contact and license details are shared only with
-                Ridevia’s authorized staff.
+                Your reservation starts as pending. Payment is due at pickup,
+                and no money is collected on this site. Your license details
+                are accessible only to Ridevia’s authorized staff.
               </p>
             </aside>
           </form>

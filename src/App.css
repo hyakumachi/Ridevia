@@ -576,3 +576,21 @@ select {
 .pickup-section { margin: 28px 0; padding: 24px 0; border-top: 1px solid #e3e7e0; border-bottom: 1px solid #e3e7e0; }
 .pickup-widget { height: 760px; min-width: 0; margin-top: 20px; }
 .pickup-widget iframe { width: 100%; height: 100%; border: 0; }
+.receipt-controls { margin-bottom: 24px; }
+.rental-receipt { max-width: 850px; margin: auto; padding: 32px; background: white; border: 1px solid #dfe5de; border-radius: 12px; }
+.receipt-heading { display: flex; justify-content: space-between; align-items: start; gap: 20px; }
+.receipt-heading h1 { font-size: 28px; letter-spacing: -1px; margin: 0; }
+.receipt-heading p, .receipt-item p { font-size: 13px; line-height: 1.6; }
+.receipt-item { break-inside: avoid; margin-top: 24px; border-top: 1px solid #dfe5de; padding-top: 24px; }
+.receipt-item dl { margin: 12px 0; }
+.receipt-item dl div { display: flex; gap: 16px; justify-content: space-between; padding: 8px 0; }
+.receipt-item dd { margin: 0; text-align: right; font-size: 13px; }
+.receipt-total { border-top: 2px solid #193b3e; padding-top: 20px; text-align: right; font-size: 20px; }
+@media print {
+  @page { margin: 15mm; }
+  body { background: white; color: black; }
+  body:has(.receipt-view) .header, body:has(.receipt-view) .admin-heading, body:has(.receipt-view) .admin-nav, .receipt-controls { display: none !important; }
+  body:has(.receipt-view) .site, body:has(.receipt-view) .admin-main { max-width: none; padding: 0; margin: 0; }
+  .rental-receipt { max-width: none; border: 0; border-radius: 0; padding: 0; }
+  .rental-receipt .reference { overflow-wrap: anywhere; }
+}

@@ -23,12 +23,20 @@ Only trusted SQL may grant membership in `private.admins`. The application's pub
 
 ## Current demonstration scope
 
-Guest reservations, pricing/discounts, conflict prevention, date availability, car details, admin login, and fleet CRUD/maintenance are implemented. Booking lifecycle management, manual payment controls, Calendly/Stripe/webhook integration and printable receipts remain. Sample cars are clearly labeled. Visual browser QA and the proposal's latency benchmarks remain unverified.
+Implemented: guest multi-car reservations, PHP pricing with a 10% discount for 7+ days, availability/overlap protection, vehicle details and photo uploads, admin login, fleet CRUD/maintenance, grouped booking management, rental status transitions, manual payment/refund records, embedded Calendly pickup scheduling and printable completed/paid receipts.
 
-The admin dashboard also includes grouped booking management, rental lifecycle actions, and confirmed manual payment/refund recording. These records do not transfer money. Status transitions and atomic group changes are enforced in the database. Online payment integration and printable receipts remain upcoming milestones.
+Guests pay at pickup. The website does not collect online payments. Admins record payments only after receiving them; those controls do not transfer money. Stripe was intentionally omitted from the current class demo by the user after account-region limitations were encountered. This differs from the original proposal's online-payment requirement; professor acceptance has not been confirmed.
 
-Admins can upload an optional car photo while adding/editing a car (JPEG/PNG/WebP, up to 5 MB). Stored photos appear on rental cards and vehicle details. Existing sample cars retain their illustrations until a photo is uploaded. Uploaded photos are public; only admins can manage them.
+Calendly scheduling works independently of Ridevia's payment records. The webhook backend and admin pickup history are implemented, but automatic syncing remains inactive on the user's Free plan. Activation still needs eligible plan access, private server credentials, function deployment and subscription registration. Appointment persistence/date validation is implemented in the prepared backend; the calendar widget itself opens the rental start date but does not restrict guests to it.
 
-After a successful reservation, guests can open the Calendly pickup scheduler or its fallback link. Name/email are prefilled and group_ref is passed as utm_content for future webhook correlation. The scheduler opens on the rental start date but does not enforce it. Appointment persistence/date validation and payment processing remain separate unfinished steps. Run `node scripts/pickup-integration.mjs` for the offline embed test.
+Car photos accept JPEG/PNG/WebP up to 5 MB. Existing cars keep placeholders until an admin uploads a photo. Multiple photos per car are deferred polish.
 
-The Calendly webhook backend and admin pickup history are implemented. Live connection is pending an eligible Calendly plan, private credentials, function deployment and subscription registration. Appointments and payments remain separate. Run `node --test supabase/functions/calendly-webhook/handler.test.mjs` for signature, request-filtering and persistence-routing tests.
+Completed, paid groups have View receipt → Print / Save as PDF. Receipts contain booking IDs, car/rental details, captured rates, discounts, payment methods and PHP total; private license/contact details and admin controls are excluded.
+
+Offline UI checks:
+
+- `node scripts/pickup-integration.mjs`: lazy Calendly embed, prefill and fallback link.
+- `node scripts/receipt-integration.mjs`: fresh receipt eligibility, multi-car totals and print action.
+- `node --test supabase/functions/calendly-webhook/handler.test.mjs`: signed webhook verification and routing.
+
+The user has confirmed the photo upload, rental booking, real Calendly scheduling, admin reservation display and on-screen receipt. A full visual/responsive walkthrough, PDF/physical print layout and the proposal's latency benchmarks remain unverified. No public-launch readiness is claimed.

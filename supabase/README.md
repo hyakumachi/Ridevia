@@ -141,3 +141,13 @@ Activation requires a webhook-eligible Calendly plan. Store CALENDLY_ACCESS_TOKE
 Activation and a genuine Calendly end-to-end callback are still pending account access. Run `node --test supabase/functions/calendly-webhook/handler.test.mjs` for offline security tests, and `supabase db query --linked --file supabase/tests/pickup_appointments.sql` for rollback-only SQL assertions. The admin Bookings page shows appointment history in Philippine Time and review reasons. Unknown/malformed group references are not attached to bookings. A needs_review row does not automatically cancel the appointment in Calendly; an admin must follow up and fix the scheduling there.
 
 Official requirements/signing guide: https://calendly.com/help/calendly-api-overview and https://developer.calendly.com/api-docs/overview/webhooks/webhook-signatures .
+
+## Completed/paid receipts — October 12, 2026
+
+FR-7 is implemented as an admin receipt view using existing RLS-protected booking reads; no migration or public lookup endpoint is added. All group members must be completed and paid. The receipt fetches the group again when opened and checks eligibility before showing print controls. It lists the customer name, group reference, every booking ID, vehicle/plate, rental dates/days, captured daily rate, discount, paid amount/method and PHP total. Totals sum stored per-car amounts in centavos. License/contact details and admin actions are excluded. The browser print dialog can print or save PDF. No email is sent, no money is transferred, and no separate receipt numbering/tax-document system is introduced.
+
+Unit tests cover all-member eligibility and centavo totals. The offline DOM integration checks pending/unpaid exclusion, a stale list becoming ineligible on receipt fetch, fresh reads, multi-car totals/discounts, escaped customer text, omitted private details, print invocation and return navigation. Browser print preview and pagination remain manual checks; web previews have not been started for implementation.
+
+## Pay-at-pickup demo scope — October 15, 2026
+
+The user chose to omit Stripe from this class demo. Guest booking/confirmation instructions now state pay at pickup; no online funds are collected. Manual payment/refund records and completed/paid receipts remain implemented. The original proposal's online-payment requirement is not fulfilled and professor acceptance of this scope change has not been confirmed. Calendly scheduling remains available, while automatic appointment syncing is inactive on the Free plan. No payment-related database behavior was changed.

@@ -1,3 +1,5 @@
+import RentalReceipt from "./RentalReceipt";
+import { canIssueReceipt } from "../lib/receipt";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 const money = (amount) =>
@@ -7,6 +9,7 @@ const money = (amount) =>
 
 export default function BookingManagement() {
   const [rows, setRows] = useState([]);
+  const [receiptRef, setReceiptRef] = useState(null);
   const [pickups, setPickups] = useState([]);
   const [pickupError, setPickupError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -97,6 +100,7 @@ export default function BookingManagement() {
       return result;
     }, {}),
   );
+  if (receiptRef) return <RentalReceipt key={receiptRef} groupRef={receiptRef} onBack={() => { setReceiptRef(null); refresh(); }} />;
   return (
     <section aria-label="Booking management">
       <div className="section-heading">
@@ -209,6 +213,7 @@ export default function BookingManagement() {
                   </strong>
                 </p>
                 <div className="row-actions">
+                  {canIssueReceipt(group.rows) && <button disabled={busy} onClick={() => setReceiptRef(group.ref)}>View receipt</button>}
                   {everyStatus("pending") && (
                     <button
                       disabled={busy}
