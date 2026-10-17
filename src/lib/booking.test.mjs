@@ -7,6 +7,9 @@ test("exclusive dates handle month, leap-year and daylight-saving boundaries", (
   assert.equal(rentalDays("2026-03-07", "2026-03-10"), 3);
   assert.equal(rentalDays("2026-10-10", "2026-10-10"), 0);
   assert.equal(rentalDays("", ""), 0);
+  assert.equal(rentalDays("2026-02-29", "2026-03-04"), 0);
+  assert.equal(rentalDays("2026-04-31", "2026-05-03"), 0);
+  assert.equal(rentalDays("2026-10-10", "2026-13-01"), 0);
 });
 test("discount starts at seven days and rounds each car to centavos", () => {
   assert.equal(
@@ -22,4 +25,5 @@ test("discount starts at seven days and rounds each car to centavos", () => {
     12.72,
   );
   assert.match(manilaToday(), /^\d{4}-\d{2}-\d{2}$/);
+  assert.equal(estimatePrice([{ daily_rate: "0.35" }], 7), 2.21);
 });

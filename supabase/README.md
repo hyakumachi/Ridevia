@@ -138,7 +138,7 @@ The `calendly-webhook` Edge Function checks the raw body HMAC, a three-minute ti
 
 Activation requires a webhook-eligible Calendly plan. Store CALENDLY_ACCESS_TOKEN, CALENDLY_WEBHOOK_SIGNING_KEY and CALENDLY_EVENT_TYPE_URI as Supabase Edge Function secrets, never VITE variables or committed files. Built-in SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY stay server-side. Deploy with `supabase functions deploy calendly-webhook`; config explicitly disables Supabase JWT checks because Calendly authenticates with its own signature. This is safe only with the handler's HMAC verification intact. The callback URL is https://nkziuwebtbyeswtgrfrp.supabase.co/functions/v1/calendly-webhook . Register a user-scoped Calendly subscription for invitee.created and invitee.canceled using the same signing key; do not send email notifications or create appointments during setup without user authorization.
 
-Activation and a genuine Calendly end-to-end callback are still pending account access. Run `node --test supabase/functions/calendly-webhook/handler.test.mjs` for offline security tests, and `supabase db query --linked --file supabase/tests/pickup_appointments.sql` for rollback-only SQL assertions. The admin Bookings page shows appointment history in Philippine Time and review reasons. Unknown/malformed group references are not attached to bookings. A needs_review row does not automatically cancel the appointment in Calendly; an admin must follow up and fix the scheduling there.
+Activation and a genuine Calendly end-to-end callback are still pending account access. Run `node --test supabase/functions/calendly-webhook/handler.test.mjs` for offline security tests, and `supabase db query --linked --file supabase/tests/pickup_appointments.sql` for rollback-only SQL assertions. Appointment history is stored for authorized database access; the demo booking screen omits this unused section because automatic callbacks are not active. Unknown/malformed group references are not attached to bookings. A needs_review row does not automatically cancel the appointment in Calendly; an admin must follow up and fix the scheduling there.
 
 Official requirements/signing guide: https://calendly.com/help/calendly-api-overview and https://developer.calendly.com/api-docs/overview/webhooks/webhook-signatures .
 
@@ -151,3 +151,21 @@ Unit tests cover all-member eligibility and centavo totals. The offline DOM inte
 ## Pay-at-pickup demo scope — October 15, 2026
 
 The user chose to omit Stripe from this class demo. Guest booking/confirmation instructions now state pay at pickup; no online funds are collected. Manual payment/refund records and completed/paid receipts remain implemented. The original proposal's online-payment requirement is not fulfilled and professor acceptance of this scope change has not been confirmed. Calendly scheduling remains available, while automatic appointment syncing is inactive on the Free plan. No payment-related database behavior was changed.
+
+## Inactive pickup UI removed
+
+The admin booking cards no longer request or display pickup_appointments while Calendly webhook syncing is inactive. The guest Calendly scheduler and prepared backend remain available. Admins check actual pickup appointments in Calendly for the current class demo.
+
+## Multiple car photos and frontend refactor — October 17, 2026
+
+Migration `20261017010000_car_galleries.sql` is deployed. Cars now store image_paths (up to 8 distinct paths in their own folder). Existing image_path covers are backfilled; a trigger keeps image_path equal to the first gallery entry, including compatibility for older single-cover writes. The public catalog adds image_paths while retaining prior fields. Photo Storage permissions and per-file 5 MB/type restrictions remain unchanged.
+
+The admin photo editor appends uploads, selects a cover by reordering, and removes gallery entries on save. Removing an entry does not delete the Storage object. Detailed photos are displayed through a selectable gallery. Refactored React views use Tailwind utilities and shared controls; see docs/frontend.md for design locations. The original global App.css was removed.
+
+## Paginated catalog, fleet and receipt browsing — October 17, 2026
+
+Migration `20261017020000_catalog_pagination.sql` is deployed. Public car_catalog and anonymous direct reads now exclude maintenance cars. `car_catalog_page(page,size,category,sort)` returns a bounded public catalog plus total/page metadata (default six cars; max 48). `public_cars_by_ids` supports direct details and initial selection without downloading the entire catalog (max 20 IDs). `car_availability_for_ids` validates dates and returns availability for at most 32 IDs; the UI sends only visible and selected IDs.
+
+`admin_booking_groups_page(page,size,receipts_only)` checks private admin membership on every call. It pages groups before joining their cars/customers, preserving complete reservations and receipt eligibility. Receipts-only requires all rows completed/paid. Default page size five groups, max twenty. Ordering is deterministic by creation timestamp/group ID. Anonymous/non-admin users cannot use this endpoint. Internal contact/license data is returned only after the admin check.
+
+Admin fleet pagination uses exact-count, ordered, ranged table reads under existing RLS (eight cars). No database row is removed by maintenance filtering or pagination. The SQL pagination regression uses rolled-back fixtures and validates catalog privacy, page/type/price controls, full multi-car groups and receipts-only filtering. Classroom-scale correctness is tested; large-production load testing remains outside this demo.

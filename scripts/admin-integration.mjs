@@ -113,7 +113,7 @@ async function checked(promise) {
 const suffix = randomBytes(6).toString("hex");
 const email = `ridevia-admin-test-${suffix}@example.com`,
   password = randomBytes(18).toString("base64url");
-const carName = "UI Admin Test " + suffix;
+const carName = "000 UI Admin Test " + suffix;
 try {
   const user = (
     await checked(
@@ -158,10 +158,15 @@ try {
     ["Daily rate (PHP)", "1500"],
   ])
     fireEvent.change(ui.getByLabelText(label), { target: { value } });
-  fireEvent.change(ui.getByLabelText("Car photo"), {
-    target: { files: [new File([png], "car.png", { type: "image/png" })] },
+  fireEvent.change(ui.getByLabelText("Car photos"), {
+    target: {
+      files: [
+        new File([png], "car.png", { type: "image/png" }),
+        new File([png], "car-side.png", { type: "image/png" }),
+      ],
+    },
   });
-  fireEvent.submit(w.document.querySelector(".car-editor form"));
+  fireEvent.submit(ui.getByRole("form", { name: "Car editor" }));
   await wait(() => assert(ui.getByText("Car added.")));
   await wait(() => assert(ui.getByRole("button", { name: "Edit " + carName })));
   testCar = (
@@ -179,7 +184,13 @@ try {
     )
   ).image_path;
   assert(storedPhoto, "Car photo path missing after upload");
-  photoPaths.push(storedPhoto);
+  const gallery = (
+    await checked(
+      server.from("cars").select("image_paths").eq("id", testCar).single(),
+    )
+  ).image_paths;
+  assert.equal(gallery.length, 2);
+  photoPaths.push(...gallery);
   const photoURL = publicClient.storage
     .from("car-photos")
     .getPublicUrl(storedPhoto).data.publicUrl;
@@ -197,6 +208,16 @@ try {
   const photoDetail = open("cars/" + testCar);
   await photoDetail.wait(() =>
     assert(photoDetail.ui.getByRole("img", { name: carName })),
+  );
+  fireEvent.click(
+    photoDetail.ui.getByRole("button", { name: "View photo 2 of " + carName }),
+  );
+  await photoDetail.wait(() =>
+    assert(
+      photoDetail.ui
+        .getByRole("img", { name: carName })
+        .src.endsWith(gallery[1]),
+    ),
   );
   const deniedUpload = await publicClient.storage
     .from("car-photos")
@@ -233,8 +254,13 @@ try {
     "Non-admin upload unexpectedly allowed",
   );
   await nonAdminClient.storage.from("car-photos").remove([storedPhoto]);
-  const storedObjects = await checked(server.storage.from("car-photos").list(testCar));
-  assert(storedObjects.some(object => object.name === storedPhoto.split("/")[1]), "Non-admin deleted public photo");
+  const storedObjects = await checked(
+    server.storage.from("car-photos").list(testCar),
+  );
+  assert(
+    storedObjects.some((object) => object.name === storedPhoto.split("/")[1]),
+    "Non-admin deleted public photo",
+  );
   console.log(
     "PASS admin photo upload, public download/rendering and unauthorized upload rejection",
   );
@@ -243,10 +269,20 @@ try {
   fireEvent.change(ui.getByLabelText("Daily rate (PHP)"), {
     target: { value: "1800" },
   });
+  fireEvent.click(ui.getByRole("button", { name: "Use as cover" }));
   fireEvent.click(ui.getByLabelText("Under maintenance"));
-  fireEvent.submit(w.document.querySelector(".car-editor form"));
+  fireEvent.submit(ui.getByRole("form", { name: "Car editor" }));
   await wait(() => assert(ui.getByRole("heading", { name: "Add a car" })));
   await wait(() => assert(ui.getByText("Car updated.")));
+  const covered = await checked(
+    server
+      .from("cars")
+      .select("image_path,image_paths")
+      .eq("id", testCar)
+      .single(),
+  );
+  assert.equal(covered.image_path, gallery[1]);
+  assert.equal(covered.image_paths.length, 2);
   const dt = new Date();
   dt.setUTCDate(dt.getUTCDate() + 120);
   const start = dt.toISOString().slice(0, 10);
@@ -266,10 +302,23 @@ try {
   await wait(() => assert(ui.getByRole("button", { name: "Edit " + carName })));
   fireEvent.click(ui.getByRole("button", { name: "Edit " + carName }));
   await wait(() => assert(ui.getByRole("heading", { name: "Edit car" })));
+  fireEvent.click(ui.getByRole("button", { name: "Remove photo 2" }));
   fireEvent.click(ui.getByLabelText("Under maintenance"));
-  fireEvent.submit(w.document.querySelector(".car-editor form"));
+  fireEvent.submit(ui.getByRole("form", { name: "Car editor" }));
   await wait(() => assert(ui.getByRole("heading", { name: "Add a car" })));
   await wait(() => assert(ui.getByText("Car updated.")));
+  const reducedGallery = await checked(
+    server
+      .from("cars")
+      .select("image_path,image_paths")
+      .eq("id", testCar)
+      .single(),
+  );
+  assert.equal(reducedGallery.image_paths.length, 1);
+  assert.equal(reducedGallery.image_path, gallery[1]);
+  console.log(
+    "PASS multi-photo upload, detail gallery, cover selection and photo removal",
+  );
   secondCar = (
     await checked(
       server
@@ -309,7 +358,7 @@ try {
   fireEvent.click(ui.getByRole("button", { name: "Edit " + carName }));
   await wait(() => assert(ui.getByRole("heading", { name: "Edit car" })));
   fireEvent.click(ui.getByLabelText("Under maintenance"));
-  fireEvent.submit(w.document.querySelector(".car-editor form"));
+  fireEvent.submit(ui.getByRole("form", { name: "Car editor" }));
   await wait(() =>
     assert(
       ui.getByText(

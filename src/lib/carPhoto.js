@@ -10,3 +10,16 @@ export function validatePhoto(file) {
     return "Choose a non-empty photo no larger than 5 MB.";
   return "";
 }
+export const maxCarPhotos = 8;
+export function carPhotos(car) {
+  return car.image_paths?.length
+    ? car.image_paths
+    : car.image_path
+      ? [car.image_path]
+      : [];
+}
+export function validatePhotos(files, existingCount = 0) {
+  if (files.length + existingCount > maxCarPhotos)
+    return `Keep up to ${maxCarPhotos} photos per car.`;
+  return files.map(validatePhoto).find(Boolean) || "";
+}

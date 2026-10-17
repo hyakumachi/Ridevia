@@ -10,6 +10,7 @@ Run `npm run dev` and open the displayed URL.
 
 - `/`: guest catalog and multi-car booking form.
 - `/#cars/<car-uuid>`: vehicle details, availability and server-calculated pricing.
+- `/#contact`: developer GitHub profiles.
 - `/#admin`: Supabase Auth login and authorized car management.
 
 Only trusted SQL may grant membership in `private.admins`. The application's public login cannot promote an account. See `supabase/README.md` for provisioning and database setup.
@@ -29,7 +30,7 @@ Guests pay at pickup. The website does not collect online payments. Admins recor
 
 Calendly scheduling works independently of Ridevia's payment records. The webhook backend and admin pickup history are implemented, but automatic syncing remains inactive on the user's Free plan. Activation still needs eligible plan access, private server credentials, function deployment and subscription registration. Appointment persistence/date validation is implemented in the prepared backend; the calendar widget itself opens the rental start date but does not restrict guests to it.
 
-Car photos accept JPEG/PNG/WebP up to 5 MB. Existing cars keep placeholders until an admin uploads a photo. Multiple photos per car are deferred polish.
+Cars support up to 8 JPEG/PNG/WebP photos, 5 MB each. Admins can add/remove photos and choose the cover. Rental cards show the cover (maximum card width 360 px); car details show the selectable gallery. Existing photos are preserved.
 
 Completed, paid groups have View receipt → Print / Save as PDF. Receipts contain booking IDs, car/rental details, captured rates, discounts, payment methods and PHP total; private license/contact details and admin controls are excluded.
 
@@ -40,3 +41,11 @@ Offline UI checks:
 - `node --test supabase/functions/calendly-webhook/handler.test.mjs`: signed webhook verification and routing.
 
 The user has confirmed the photo upload, rental booking, real Calendly scheduling, admin reservation display and on-screen receipt. A full visual/responsive walkthrough, PDF/physical print layout and the proposal's latency benchmarks remain unverified. No public-launch readiness is claimed.
+
+## Frontend design/refactor
+
+React pages compose feature components; state/API logic is separated into hooks. Tailwind v4 utilities style the views and shared UI controls. The former App.css was removed; index.css contains only the Tailwind import, theme/base rules and print margins. See [frontend structure and design entry points](docs/frontend.md) before applying your own design.
+
+`node scripts/guest-integration.mjs` checks the guest multi-car booking flow, photo gallery and conflict/duplicate handling offline.
+
+Catalog cards now align in a responsive two-column layout. Maintenance cars are hidden from guest listing and detail queries. The home page supports car-type filtering and name/type/price sorting, while preserving selected cars across pages. Guest cars, admin fleet and admin booking/receipt groups are paginated on the server. Find completed/paid receipts under Admin → Bookings → Receipts. `npm run test:ui` includes the guest, scheduler, receipt and pagination checks.

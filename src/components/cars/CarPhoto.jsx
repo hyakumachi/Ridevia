@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 export default function CarPhoto({ path, name }) {
   const [failed, setFailed] = useState(null);
   if (path && failed !== path)
     return (
       <img
-        className="car-photo"
+        className="h-full w-full object-cover"
         src={
           supabase.storage.from("car-photos").getPublicUrl(path).data.publicUrl
         }

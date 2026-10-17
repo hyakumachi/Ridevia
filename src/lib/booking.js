@@ -1,6 +1,11 @@
 export function rentalDays(start, end) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end))
     return 0;
+  for (const value of [start, end]) {
+    const date = new Date(`${value}T00:00:00Z`);
+    if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value)
+      return 0;
+  }
   const days =
     (Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) /
     86400000;
@@ -12,7 +17,7 @@ export function estimatePrice(cars, days) {
     cars.reduce(
       (total, car) =>
         total +
-        Math.round(Number(car.daily_rate) * 100 * days * (days >= 7 ? 0.9 : 1)),
+        Math.round(Math.round(Number(car.daily_rate) * 100) * days * (days >= 7 ? 90 : 100) / 100),
       0,
     ) / 100
   );

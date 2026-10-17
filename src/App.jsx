@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import GuestBooking from "./GuestBooking";
-import Admin from "./components/Admin";
-import CarDetail from "./components/CarDetail";
-
+import ContactPage from "./pages/ContactPage";
+import GuestBooking from "./pages/GuestBooking";
+import AdminPage from "./pages/AdminPage";
+import CarDetailPage from "./pages/CarDetailPage";
 export default function App() {
   const [hash, setHash] = useState(() => window.location.hash);
   useEffect(() => {
@@ -14,9 +14,13 @@ export default function App() {
   const params = new URLSearchParams(query);
   if (route === "admin" || route === "admin/setup")
     return (
-      <Admin setupToken={params.get("token")} setupType={params.get("type")} />
+      <AdminPage
+        setupToken={params.get("token")}
+        setupType={params.get("type")}
+      />
     );
-  if (route.startsWith("cars/")) return <CarDetail id={route.slice(5)} />;
+  if (route === "contact") return <ContactPage />;
+  if (route.startsWith("cars/")) return <CarDetailPage id={route.slice(5)} />;
   return (
     <GuestBooking
       key={hash}

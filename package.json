@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "node --test src/lib/*.test.mjs",
-    "test:integration": "node scripts/admin-integration.mjs"
+    "test:integration": "node scripts/admin-integration.mjs",
+    "test:ui": "node scripts/guest-integration.mjs && node scripts/pickup-integration.mjs && node scripts/receipt-integration.mjs && node scripts/pagination-integration.mjs",
+    "test:webhooks": "node --test supabase/functions/calendly-webhook/handler.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

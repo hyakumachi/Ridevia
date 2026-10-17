@@ -13,7 +13,7 @@ test('signatures reject tampering, stale/future timestamps and malformed headers
  const raw=JSON.stringify(fixture);
  assert(await verifySignature(raw,sign(raw),secret));
  assert(!await verifySignature(raw+' ',sign(raw),secret));
- for(const t of [String(Number(stamp)-181),String(Number(stamp)+181)]) assert(!await verifySignature(raw,sign(raw,t),secret));
+ for(const t of [String(Number(stamp)-181),String(Number(stamp)+181)]) assert(!await verifySignature(raw,sign(raw,t),secret,Number(stamp)*1000));
  assert(!await verifySignature(raw,`t=${stamp},t=${stamp},v1=bad`,secret));
 });
 test('authenticated webhook checks canonical event then persists without updating payment', async()=>{
