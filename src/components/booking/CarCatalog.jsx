@@ -82,7 +82,7 @@ export default function CarCatalog({
                 key={car.id}
                 car={car}
                 isSelected={selected.includes(car.id)}
-                blocked={checked && !availability.cars[car.id]}
+                blocked={["reserved", "rented"].includes(car.status) || (checked && !availability.cars[car.id])}
                 checked={checked}
                 submitting={submitting}
                 toggle={toggle}

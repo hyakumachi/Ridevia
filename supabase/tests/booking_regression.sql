@@ -13,15 +13,19 @@ begin
   if (r->>'total_price')::numeric <> 6300 or r->>'currency' <> 'PHP' then
     raise exception 'Seven-day pricing failed';
   end if;
-  r := public.submit_booking(array['10000000-0000-0000-0000-000000000001'::uuid],
-    current_date+37,current_date+38,'Test Guest','ridevia-sql-regression@example.com','09123456789','TEST-LICENSE');
-  if (r->>'total_price')::numeric <> 1000 then raise exception 'Adjacent date / one-day pricing failed'; end if;
+  begin
+    perform public.submit_booking(array['10000000-0000-0000-0000-000000000001'::uuid],
+      current_date+37,current_date+38,'Test Guest','ridevia-sql-regression@example.com','09123456789','TEST-LICENSE');
+    raise exception 'Active car accepted adjacent reservation';
+  exception when check_violation then null;end;
+  if (public.calculate_price('10000000-0000-0000-0000-000000000001',current_date+37,current_date+38)->>'total_price')::numeric <> 1000 then
+    raise exception 'One-day pricing failed';end if;
   begin
     perform public.submit_booking(array['10000000-0000-0000-0000-000000000001'::uuid,
       '10000000-0000-0000-0000-000000000002'::uuid],current_date+31,current_date+32,
       'Test Guest','ridevia-sql-regression@example.com','09123456789','TEST-LICENSE');
     raise exception 'Overlap was accepted';
-  exception when exclusion_violation then null; end;
+  exception when exclusion_violation or check_violation then null; end;
   begin
     perform public.submit_booking(array['10000000-0000-0000-0000-000000000002'::uuid],
       current_date+40,current_date+40,'Test Guest','ridevia-sql-regression@example.com','09123456789','TEST-LICENSE');
@@ -34,9 +38,9 @@ begin
       where car_id='10000000-0000-0000-0000-000000000001') then
     raise exception 'Availability exposed a reserved car as free';
   end if;
-  if not (select available from public.car_availability(current_date+38,current_date+39)
+  if (select available from public.car_availability(current_date+38,current_date+39)
       where car_id='10000000-0000-0000-0000-000000000001') then
-    raise exception 'Availability failed exclusive end dates';
+    raise exception 'Active car became available for later dates';
   end if;
   begin
     perform plate_number from public.cars;
@@ -54,7 +58,7 @@ end $$;
 reset role;
 do $$
 begin
-  if (select count(*) from public.customers where email='ridevia-sql-regression@example.com') <> 2 then
+  if (select count(*) from public.customers where email='ridevia-sql-regression@example.com') <> 1 then
     raise exception 'Failed submission left a customer behind';
   end if;
   if exists (select 1 from public.bookings where car_id='10000000-0000-0000-0000-000000000002') then
@@ -98,7 +102,7 @@ do $$
 begin
   if not private.is_admin() then raise exception 'Provisioned admin denied'; end if;
   if (select count(*) from public.bookings where car_id in
-    ('10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002')) <> 2 then
+    ('10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002')) <> 1 then
     raise exception 'Admin cannot read fixture bookings'; end if;
   begin
     update public.bookings set daily_rate=1
@@ -112,6 +116,7 @@ set local role anon;
 select public.submit_booking(array['10000000-0000-0000-0000-000000000001'::uuid],
  current_date+30,current_date+37,'Test Guest','ridevia-sql-regression@example.com','09123456789','TEST-LICENSE');
 reset role;
+update public.bookings set status='cancelled' where car_id='10000000-0000-0000-0000-000000000001' and status='pending';
 update public.cars set maintenance=false where plate_number='TEST-B';
 set local role anon;
 do $$

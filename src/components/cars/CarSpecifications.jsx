@@ -28,7 +28,11 @@ export default function CarSpecifications({ car }) {
           <dd className="mt-2 font-semibold">
             {car.maintenance
               ? "Under maintenance"
-              : "Available — check your dates below"}
+              : car.status === "rented"
+                ? "On rental — awaiting return"
+                : car.status === "reserved"
+                  ? "Reserved — currently unavailable"
+                  : "Choose dates to check availability"}
           </dd>
         </div>
       </dl>

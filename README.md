@@ -6,7 +6,7 @@ Car-rental management class demonstration built with React, Vite, Tailwind CSS a
 
 Install dependencies with `npm install`. Create `.env.local` containing `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, using your Supabase project URL and browser publishable key. Never add a secret/service-role key to a VITE variable.
 
-Run `npm run dev` and open the displayed URL.
+Run `npm run dev` and open the displayed URL. For the separate Docker-backed local database, use `npm run dev:local`; see [local development](docs/local-development.md).
 
 - `/`: guest catalog and multi-car booking form.
 - `/#cars/<car-uuid>`: vehicle details, availability and server-calculated pricing.
@@ -49,3 +49,7 @@ React pages compose feature components; state/API logic is separated into hooks.
 `node scripts/guest-integration.mjs` checks the guest multi-car booking flow, photo gallery and conflict/duplicate handling offline.
 
 Catalog cards now align in a responsive two-column layout. Maintenance cars are hidden from guest listing and detail queries. The home page supports car-type filtering and name/type/price sorting, while preserving selected cars across pages. Guest cars, admin fleet and admin booking/receipt groups are paginated on the server. Find completed/paid receipts under Admin → Bookings → Receipts. `npm run test:ui` includes the guest, scheduler, receipt and pagination checks.
+
+## Rental holds and payment (local update, October 21)
+
+Recording payment starts a pending rental automatically. Pending or ongoing reservations block all new reservations for that car, including non-overlapping future dates. Completing or cancelling releases it; passing the return date does not release it automatically. Public catalog/detail status is derived from bookings, so refresh shows Reserved or On rental. This intentionally replaces the original overlap-only rule. The new migrations are applied locally; deploy them to hosted Supabase before using the updated frontend against that database. Existing bookings are preserved.

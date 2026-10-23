@@ -22,11 +22,15 @@ export default function CarCard({
         <span
           className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold shadow-sm ${blocked ? "bg-white text-danger" : "bg-white/95 text-ink"}`}
         >
-          {blocked
-            ? "Unavailable for dates"
-            : checked
-              ? "Available for dates"
-              : "Check dates"}
+          {car.status === "rented"
+            ? "On rental"
+            : car.status === "reserved"
+              ? "Reserved"
+              : blocked
+                ? "Unavailable"
+                : checked
+                  ? "Available for dates"
+                  : "Choose dates"}
         </span>
         {car.image_paths?.length > 1 && (
           <span className="absolute bottom-3 right-3 rounded-full bg-ink/85 px-2.5 py-1 text-xs text-white">

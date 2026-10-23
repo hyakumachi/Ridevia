@@ -64,7 +64,7 @@ export default function FleetList({
                         : "my-3 text-sm text-accent"
                     }
                   >
-                    {car.maintenance ? "Maintenance" : "Available"}
+                    {car.maintenance ? "Maintenance" : "In service"}
                   </span>
                 </p>
               </div>

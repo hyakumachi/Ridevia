@@ -64,6 +64,7 @@ for (let i = 1; i <= 7; i++)
   cars.push({
     id: `extra-${i}`,
     name: `Extra ${i}`,
+    status: i === 1 ? "reserved" : i === 2 ? "rented" : "available",
     category: "sedan",
     daily_rate: 1000,
     maintenance: false,
@@ -123,7 +124,7 @@ for (const conflict of [false, true]) {
             .filter((car) => payload.p_ids.includes(car.id))
             .map((car) => ({
               car_id: car.id,
-              available: !car.maintenance && !rejected,
+              available: !car.maintenance && !["reserved", "rented"].includes(car.status) && !rejected,
             })),
         };
       if (name === "submit_booking") {
@@ -149,6 +150,10 @@ for (const conflict of [false, true]) {
     const wait = (fn) => waitFor(fn, { container: w.document.body });
     await wait(() => assert(ui.getByLabelText("Select Car A")));
     assert(ui.getByRole("heading", { level: 1, name: "Reserve your ride" }));
+    assert(ui.getByText("Reserved"));
+    assert(ui.getByText("On rental"));
+    assert(ui.getByLabelText("Select Extra 1").disabled);
+    assert(ui.getByLabelText("Select Extra 2").disabled);
     for (const heading of ["Pick your dates", "Find your ride", "Make it yours"]) {
       const step = ui.getByRole("heading", { name: heading }).parentElement;
       assert.equal(step.querySelector("p"), null, "Step description should be removed");

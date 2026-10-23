@@ -110,8 +110,8 @@ export default function BookingGroupCard({
             Record payment
           </Button>
           <p className="mt-4 text-xs leading-relaxed text-muted">
-            Record only money already received. This does not charge the
-            customer.
+            Record only money already received. Confirming payment automatically
+            starts pending rentals. This does not charge the customer.
           </p>
         </div>
       )}

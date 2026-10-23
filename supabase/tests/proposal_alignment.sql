@@ -21,8 +21,8 @@ begin
   if public.check_availability('60000000-0000-0000-0000-000000000001',current_date+91,current_date+92) then
     raise exception 'Reserved car marked free';
   end if;
-  if not public.check_availability('60000000-0000-0000-0000-000000000001',current_date+97,current_date+98) then
-    raise exception 'Exclusive end date failed';
+  if public.check_availability('60000000-0000-0000-0000-000000000001',current_date+97,current_date+98) then
+    raise exception 'Active car was available for later dates';
   end if;
   begin
     perform public.calculate_price('60000000-0000-0000-0000-000000000099',current_date+90,current_date+97);
@@ -32,7 +32,7 @@ begin
     perform public.check_availability('60000000-0000-0000-0000-000000000001',current_date+90,current_date+90);
     raise exception 'Invalid dates accepted';
   exception when invalid_parameter_value then null; end;
-  if not exists(select 1 from public.car_catalog() where id='60000000-0000-0000-0000-000000000001' and make='Test' and model='Sedan' and category='sedan' and status='available') then
+  if not exists(select 1 from public.car_catalog() where id='60000000-0000-0000-0000-000000000001' and make='Test' and model='Sedan' and category='sedan' and status='reserved') then
     raise exception 'Catalog proposal fields missing';
   end if;
 end;

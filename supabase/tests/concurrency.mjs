@@ -38,13 +38,13 @@ async function race(label,first,second,finish,expected){
 let created=false;
 try{
  await query(`begin;insert into public.cars(id,name,plate_number,daily_rate) values ('${id}','Concurrency test','RACE-TEMP-A',1000),('${id2}','Concurrency test','RACE-TEMP-B',2000);insert into public.customers(id,full_name,email,phone,license_number) values ('${customer}','Concurrency Test','concurrency-test@example.com','09123456789','TEST-ONLY');insert into auth.users(id) values ('${admin}');insert into private.admins(user_id) values ('${admin}');commit;`);created=true;
- await race('overlapping reservations serialize and reject second',insert(),insert(),'commit','23P01');
+ await race('overlapping reservations serialize and reject second',insert(),insert(),'commit','23514');
  await race('rollback releases reservation lock',insert(),insert(),'rollback',null);
  await race('maintenance blocks competing booking',maintenance,insert(),'commit','23514');
  await race('booking blocks competing maintenance',insert(),maintenance,'commit','23514');
  // Exercise the actual RPC with cars selected in reverse order.
  const submit=ids=>`set local role anon;select public.submit_booking(array[${ids.map(x=>`'${x}'::uuid`).join(',')}],current_date+160,current_date+167,'Concurrency Test','race-rpc@example.com','09123456789','TEST-ONLY');reset role`;
- await race('RPC reverse car order avoids deadlock',submit([id,id2]),submit([id2,id]),'commit','23P01');
+ await race('RPC reverse car order avoids deadlock',submit([id,id2]),submit([id2,id]),'commit','23514');
  const insertGroup = `insert into public.bookings(group_ref,customer_id,car_id,start_date,end_date,daily_rate) select '${group}','${customer}',id,current_date+180,current_date+187,1 from unnest(array['${id}'::uuid,'${id2}'::uuid]) id`;
  const action = status => `set local request.jwt.claims='{"sub":"${admin}"}';set local role authenticated;select public.update_booking_group('${group}','${status}');reset role`;
  await query(insertGroup);

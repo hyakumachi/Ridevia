@@ -15,18 +15,6 @@ export default function BookingActions({
           View receipt
         </Button>
       )}
-      {everyStatus("pending") && (
-        <Button
-          disabled={busy}
-          onClick={() =>
-            change(group, {
-              p_status: "ongoing",
-            })
-          }
-        >
-          Start rental
-        </Button>
-      )}
       {everyStatus("ongoing") && (
         <Button
           disabled={busy}

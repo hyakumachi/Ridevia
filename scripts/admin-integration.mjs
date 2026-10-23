@@ -413,14 +413,13 @@ try {
       await checked(
         server
           .from("bookings")
-          .select("payment_status,payment_method")
+          .select("payment_status,payment_method,status")
           .eq("group_ref", bookingRef),
       )
     ).every(
-      (row) => row.payment_status === "paid" && row.payment_method === "cash",
+      (row) => row.payment_status === "paid" && row.payment_method === "cash" && row.status === "ongoing",
     ),
   );
-  fireEvent.click(groupUI().getByRole("button", { name: "Start rental" }));
   await wait(() =>
     assert(
       !groupUI().getByRole("button", { name: "Complete rental" }).disabled,
